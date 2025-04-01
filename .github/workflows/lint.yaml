@@ -1,0 +1,31 @@
+name: Go Lint Workflow
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.1'
+          cache: true
+          
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+        
+      - name: Run golangci-lint
+        run: |
+          for service in services/*; do
+            if [ -d "$service" ] && [ -f "$service/go.mod" ]; then
+              echo "Running linting in $service"
+              (cd "$service" && golangci-lint run)
+            elif [ -d "$service" ]; then
+              echo "Skipping linting for $service - no go.mod file found"
+            fi
+          done
